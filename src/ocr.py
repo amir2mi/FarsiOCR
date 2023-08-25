@@ -2,9 +2,10 @@ import os
 import re
 
 import pytesseract
-from pdf2image import convert_from_path
-
+# from pdf2image import convert_from_path
+import fitz
 from preprocess import process_image
+mat = fitz.Matrix(300 / 72, 300 / 72)  # sets zoom factor for 300 dpi
 
 langs = "fas"  # Languages for OCR eng+fas
 dirname = os.path.dirname(os.path.dirname(__file__))
@@ -20,11 +21,19 @@ def main():
         if filename.endswith('.pdf'):
             print(os.path.join(input_dir, filename))
             fullName = os.path.join(input_dir, filename)
-            pages = convert_from_path(fullName, 500)
+            print('Started processing PDF...')
+            # pages = convert_from_path(fullName, 500)
+            pages = fitz.open(fullName)
             image_counter = 1
             for page in pages:
+                # if(image_counter > 20):
+                #     break
+                print(f'Processing Page: {image_counter}')
+                # image_name = os.path.splitext(fullName)[0] + '_' + str(image_counter) + '.tiff'
                 image_name = os.path.splitext(fullName)[0] + '_' + str(image_counter) + '.tiff'
-                page.save(image_name, format='TIFF')
+                # page.save(image_name, format='TIFF')
+                img = page.get_pixmap(matrix=mat)
+                img.pil_save(image_name, format="TIFF", dpi=(300,300))
                 image_counter += 1
 
     for filename in os.listdir(input_dir):
@@ -32,20 +41,23 @@ def main():
         if filename.endswith(tuple(img_ext)):
             print(filename)
             fileAddress = os.path.join(input_dir, filename)
-            img = process_image(fileAddress)
+            try:
+                img = process_image(fileAddress)
 
-            # Recognize the text as string in image using pytesserct
-            config = ''
-            text = str(pytesseract.image_to_string(img, lang=langs, config=config))
+                # Recognize the text as string in image using pytesserct
+                config = ''
+                text = str(pytesseract.image_to_string(img, lang=langs, config=config))
 
-            # Remove empty lines of text - s.strip() removes lines with spaces
-            text = os.linesep.join([s for s in text.splitlines() if s.strip()])
+                # Remove empty lines of text - s.strip() removes lines with spaces
+                text = os.linesep.join([s for s in text.splitlines() if s.strip()])
 
-            # Creating a text file to write the output
-            write_output(filename, text)
+                # Creating a text file to write the output
+                write_output(filename, text)
 
-            # Evaluate the result based on Levenshtein distance
-            # evaluate_result(text)
+                # Evaluate the result based on Levenshtein distance
+                # evaluate_result(text)
+            except:
+                print(f'🚫 something happened with {filename}\n')
 
 
 def write_output(filename, text):

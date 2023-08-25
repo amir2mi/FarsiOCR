@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import pytesseract
 from PIL import Image
-
+import os
 
 def process_image(img_path):
     temp_filename = resize_image(img_path)
@@ -28,6 +28,7 @@ def resize_image(img_path):
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".TIFF")
         temp_filename = temp_file.name
         im_resized.save(temp_filename, dpi=(300, 300))  # best for OCR
+        os.chmod(temp_filename, 0o777)
 
         return temp_filename
     except IOError:

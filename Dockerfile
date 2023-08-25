@@ -10,6 +10,7 @@ RUN apt-get install tesseract-ocr-fas
 WORKDIR /app
 
 # Install app dependencies
+
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
